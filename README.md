@@ -15,7 +15,7 @@ Introduction
 This project aims to create a web application that can identify plant species from uploaded images and provide comprehensive information about them using an external API. The system offers a user-friendly interface and a robust backend to handle image processing and API interactions.
 
 Features
-1.Plant Identification: Recognizes plant species from images using an external API.
+1. Plant Identification: Recognizes plant species from images using an external API.
 2. Information Retrieval: Provides detailed information about the identified plant species.
 3. User-Friendly Interface: A simple and intuitive web interface for easy interaction.
 4. Scalable Architecture: Designed to handle multiple requests and large datasets.
@@ -49,7 +49,7 @@ Running the Application
 2. Navigate to http://127.0.0.1:5000/ in your web browser to use the application.
 
 Uploading an Image
-1.Click on the "Upload Image" button.
+1. Click on the "Upload Image" button.
 2. Select an image file from your computer.
 3. The system will process the image, identify the plant species, and display detailed information about the plant.
 

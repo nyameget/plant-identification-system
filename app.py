@@ -190,16 +190,25 @@ def setting():
                 decision = request.form['decision']
                 if decision == 'yes':
                     user = get_user(username)
+                    # Assuming `get_plants` returns a list of plant objects
+                    plants = get_plants(username)
                     if user:
+                        # Delete all associated plants
+                        if plants:
+                            for plant in plants:
+                                db.session.delete(plant)
+                        # Delete the user
                         db.session.delete(user)
+                        # Commit the transaction
                         db.session.commit()
-                        flash('User has been successfully deleted', 'success')
-                        return redirect(url_for('welcome'))
-                    flash('User not found', 'warning')
-                    return redirect(url_for('setting'))
+                        flash('User\'s data has been successfully deleted', 'success')
+                        return redirect(url_for('logout'))
+                    
+                    flash('User not found', 'danger')
+                    return redirect(url_for('logout'))
             elif 'rate' in request.form:
                 rate = int(request.form['rate'])
-                feedbak = str(request.form['feedback'])
+                feedback = str(request.form['feedback'])
                 new_review = Comment(comment=feedback, rate=rate, username=username)
                 db.session.add(new_review)
                 db.session.commit()
@@ -572,7 +581,7 @@ def review():
             return render_template('review.html', reviews=reviews)
         flash('User has not logged in', 'info')
         return redirect(url_for('signin')) 
-    except:
+    except Exception as e:
         print(f"An error occurred: {str(e)}")
         
         return redirect(url_for('signin'))  # Redire

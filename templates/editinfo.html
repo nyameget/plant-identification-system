@@ -6,7 +6,7 @@
 
 {% block content %}
     <div class="body">
-        <div class="wrapper">
+        <div class="wrapper" id="wrapper-1">
             <form action="{{ url_for('edit') }}" method="post" id="form1">
                 <h2>Change Password</h2>
                 <div class="radio-group">
@@ -38,7 +38,7 @@
             </form>
         </div>
         <hr>
-        <div class="wrapper">
+        <div class="wrapper" id="wrapper-2">
             <form action="{{url_for('edit')}}" method="post" id="form2">
                 <h2>Change Email</h2>                      
                 <div class="radio-group">

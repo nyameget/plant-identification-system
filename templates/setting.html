@@ -40,7 +40,7 @@
                     <div class="theme-content">
                         <select name="theme" id="theme">
                             <option value="light" {% if theme == 'light' %}selected{% endif %}>Light</option>
-                            <option value="dark" {% if theme == 'dark' %}selected{% endif %}>Dark</option>
+                            <option value="dark-theme" {% if theme == 'dark-theme' %}selected{% endif %}>Dark</option>
                         </select>
                         <button type="submit">Change Theme</button>
                     </div>
@@ -93,35 +93,40 @@
                     <label for="delete_account">Delete Account:</label>
                     <button type="button" id="delete_account" name="delete_account" onclick="togglePopup()" class="btn">Delete</button>
                 </div>
-            </div>      
-            <div class="review-container">
-                <div class="star-widget">
-                    <form action="{{ url_for('setting') }}" method="post">
-                        <input type="radio" name="rate" id="rate-5" value="5">
-                        <label for="rate-5" class="fas fa-star"></label>
-                        <input type="radio" name="rate" id="rate-4" value="4">
-                        <label for="rate-4" class="fas fa-star"></label>
-                        <input type="radio" name="rate" id="rate-3" value="3">
-                        <label for="rate-3" class="fas fa-star"></label>
-                        <input type="radio" name="rate" id="rate-2" value="2">
-                        <label for="rate-2" class="fas fa-star"></label>
-                        <input type="radio" name="rate" id="rate-1"  value="1">
-                        <label for="rate-1" class="fas fa-star"></label>
-                        <header id="form-header"></header>
-                        <div class="textarea">
-                            <textarea name="feedback" id="textarea" cols="30"></textarea>
-                        </div>
-                        <div class="btnn">
-                            <button type="submit" class="btn">Post</button>
-                        </div>
-                    </form>
+            </div>  
+            <div class="feed">
+                <label for="delete_account">User Feedback:</label>    
+                <div class="review-container">
+                    <div class="star-widget">
+                        <form action="{{ url_for('setting') }}" method="post">
+                            <input type="radio" name="rate" id="rate-5" value="5">
+                            <label for="rate-5" class="fas fa-star"></label>
+                            <input type="radio" name="rate" id="rate-4" value="4">
+                            <label for="rate-4" class="fas fa-star"></label>
+                            <input type="radio" name="rate" id="rate-3" value="3">
+                            <label for="rate-3" class="fas fa-star"></label>
+                            <input type="radio" name="rate" id="rate-2" value="2">
+                            <label for="rate-2" class="fas fa-star"></label>
+                            <input type="radio" name="rate" id="rate-1"  value="1">
+                            <label for="rate-1" class="fas fa-star"></label>
+                            <header id="form-header"></header>
+                            <div class="textarea">
+                                <textarea name="feedback" id="textarea" cols="30"></textarea>
+                            </div>
+                            <div class="btnn">
+                                <button type="submit" class="btn">Post</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+    
+            </div>
+            <div>
+                <div class="form-group">
+                    <label for="credits">User Reviews:</label>
+                    <a href="{{ url_for('review') }}" class="review btn">View Reviews</a>
                 </div>
             </div>
-    
-                <div class="form-group">
-                    <label for="credits">Credits:</label>
-                    <button type="button" id="credits" name="credits" class="btn">View Credits</button>
-                </div>
             
         </section>
     </div>

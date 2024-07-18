@@ -24,7 +24,7 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     comment = db.Column(db.Text, nullable=False)
     rate = db.Column(db.Integer, nullable=False)
-    username = db.Column(db.String(50), db.ForeignKey('users.username'), nullable=False)
+    username = db.Column(db.String(50), db.ForeignKey('users.username'), nullable=True)
 
 # Helper functions to check existence
 def email_exists(email):
@@ -57,7 +57,11 @@ def get_reviews():
     comments = []
     print(reviews)
     for review in reviews:
-        name = get_user(review.username).name
+        user = get_user(review.username)
+        if user:
+            name = user.name
+        else:
+            name = 'Deleted User'
         comments.append({
             'id': review.id,
             'username': review.username,

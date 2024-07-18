@@ -12,14 +12,14 @@
     <title>Plant Identification</title>
 </head>
 <body class="{{ data.theme }}">
-    <header class="p-3 mb-3 border-bottom">
+    <header class="p-3 mb-3">
         <div class="container">
             <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
                 <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-                    <li><a href="/home" {% if data.active_page == "home" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %} >Home</a></li>
-                    <li><a href="/history" {% if data.active_page == "history" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %} >History</a></li>
-                    <li><a href="/setting" {% if data.active_page == "setting" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %} >Settings</a></li>
-                    <li><a href="/about" {% if data.active_page == "about" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %} >About</a></li>
+                    <li><a href="/home" {% if data.active_page == "home" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %} >Home</a></li>
+                    <li><a href="/history" {% if data.active_page == "history" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %} >History</a></li>
+                    <li><a href="/setting" {% if data.active_page == "setting" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %} >Settings</a></li>
+                    <li><a href="/about" {% if data.active_page == "about" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %} >About</a></li>
                 </ul>
                 <div class="dropdown text-end">
                     <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -60,11 +60,11 @@
         <div class="container">
             <footer class="py-3 my-4">
               <ul class="nav justify-content-center border-bottom pb-3 mb-3">
-                <li class="nav-item"><a href="/home" {% if data.active_page == "home" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %}>Home</a></li>
-                <li class="nav-item"><a href="/history" {% if data.active_page == "history" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %}>Histroy</a></li>
-                <li class="nav-item"><a href="/setting" {% if data.active_page == "setting" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %}>Settings</a></li>
-                <li class="nav-item"><a href="/profile" {% if data.active_page == "profile" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %}>Profile</a></li>
-                <li class="nav-item"><a href="/about" {% if data.active_page == "about" %} class="nav-link px-2 link-secondary" {% else %} class="nav-link px-2 link-body-emphasis" {% endif %}>About</a></li>
+                <li class="nav-item"><a href="/home" {% if data.active_page == "home" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %}>Home</a></li>
+                <li class="nav-item"><a href="/history" {% if data.active_page == "history" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %}>Histroy</a></li>
+                <li class="nav-item"><a href="/setting" {% if data.active_page == "setting" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %}>Settings</a></li>
+                <li class="nav-item"><a href="/profile" {% if data.active_page == "profile" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %}>Profile</a></li>
+                <li class="nav-item"><a href="/about" {% if data.active_page == "about" %} class="nav-link px-2 link-secondary active" {% else %} class="nav-link px-2 link-body-emphasis non-active" {% endif %}>About</a></li>
               </ul>
               <p class="text-center text-body-secondary">© 2024 Company, Inc</p>
             </footer>

@@ -11,15 +11,16 @@ body.dark-theme{
   --text-color: hsl(var(--hue), 4%, 75%);
   --body-color: hsl(var(--hue), 8%, 12%);
   --container-color: hsl(var(--hue), 8%, 16%);
+  --drop-color: hsl(var(--hue), 24%, 32%);
 }
 
 /*========== Variables Light theme ==========*/
 body.light{
-  --first-color: hsl(var(--hue), 24%, 32%);
   --title-color: hsl(var(--hue), 4%, 15%);
   --text-color: hsl(var(--hue), 4%, 35%);
   --body-color: hsl(var(--hue), 0%, 100%);
   --container-color: #FFF;
+  --drop-color: none;
 }
 
 :root {
@@ -28,6 +29,7 @@ body.light{
   /*========== Colors ==========*/
   /*Color mode HSL(hue, saturation, lightness)*/
   --hue: 152;
+  --first-color: hsl(var(--hue), 24%, 32%);
   --first-color-alt: hsl(var(--hue), 24%, 28%);
   --first-color-light: hsl(var(--hue), 24%, 66%);
   --first-color-lighten: hsl(var(--hue), 24%, 92%);
@@ -198,19 +200,46 @@ the website, in dark theme
 }
 
 /* Active link */
-.active-link{
-  position: relative;
-  color: var(--first-color);
+.active{
+  position: relative !important;
+  color: var(--first-color) !important;
 }
 
-.active-link::after{
+.active::after{
   content: '';
-  position: absolute;
-  bottom: -.5rem;
-  left: 0;
-  width: 50%;
-  height: 2px;
-  background-color: var(--first-color);
+  position: absolute !important;
+  bottom: -.5rem !important;
+  left: 0 !important;
+  width: 50% !important;
+  height: 2px !important;
+  margin-left: .5rem;
+  background-color: var(--first-color) !important;
+}
+
+.non-active{
+  color: var(--title-color) !important;
+}
+
+.non-active:hover{
+  color: var(--first-color) !important;
+}
+
+.nav-link{
+  padding-bottom: 0px;
+}
+
+/*=============== DROPDOWN MENU ===============*/
+.dropdown-menu{
+  background-color: var(--body-color) !important;
+}
+
+.dropdown-item{
+  color: var(--title-color) !important;
+}
+
+.dropdown-item:hover{
+  background-color: var(--drop-color);
+  color: #fff;
 }
 
 /*=============== HOME ===============*/
@@ -354,6 +383,11 @@ the website, in dark theme
   color: var(--first-color);
   margin-top: .15rem;
 }
+
+.product__description{
+  text-align: center;
+}
+
 /*=============== BREAKPOINTS ===============*/
 /* For small devices */
 @media screen and (max-width: 320px){

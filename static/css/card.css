@@ -1,16 +1,24 @@
 *{
-    margin: 0px;
-    padding: 0px;
-    box-sizing: border-box;
     font-family: sans-serif;
 }
 
-:root {
-	--grey: #f2f2f2;
+body.dark-theme{
+    --text-color: hsl(var(--hue), 4%, 75%);
+    --container-color: hsl(var(--hue), 8%, 16%);
+    --card-span-color: hsl(var(--hue), 4%, 75%);
+    --read-more-color: hsl(var(--hue), 4%, 75%);
+}
+  
+  /*========== Variables Light theme ==========*/
+body.light{
+    --text-color: hsl(var(--hue), 4%, 35%);
+    --container-color: #FFF;
+    --card-span-color: #666;
+    --read-more-color: #fff;
 }
 
-body{
-    background-color: #f0f0f0;
+:root{
+    --grey: #f2f2f2;
 }
 
 .card-container{
@@ -22,7 +30,7 @@ body{
 
 .card{
     max-width: 400px;
-    background-color: #fff;
+    background-color: var(--container-color);
     border-radius: 30px;
     padding: 30px;
     overflow: hidden;
@@ -66,7 +74,7 @@ body{
 }
 
 .card-content p{
-    color: #666;
+    color: var(--text-color);
     font-size: 15px;
     line-height: 1.3;    
 }
@@ -78,7 +86,7 @@ body{
     text-decoration: none;
     border-radius: 4px;
     margin-top: 16px;
-    color: #fff;
+    color: var(--read-more-color);
 }
 
 .common-name{
@@ -101,6 +109,11 @@ ul{
 .taxonomy ul{
     display: grid;
     grid-template-columns: auto auto;
+}
+
+.taxonomy span,
+.taxonomy li{
+    color: var(--card-span-color);
 }
 
 .description{

@@ -27,11 +27,13 @@ def watering_message(watering):
 
 ### This truncates the words so that all have the same word limits
 def truncate_words(sentence, word_limit):
+  if sentence is not None:
     words = sentence.split()
     if len(words) <= word_limit:
       return sentence
-    truncated = ''.join(words[:word_limit])
+    truncated = ' '.join(words[:word_limit])
     return truncated + "..."
+  return None
 
 ### This generates the severity level of the disease
 def generate_category(number):
@@ -45,6 +47,7 @@ def generate_category(number):
     elif number > 0.75:
       return 'Critical'
 
+### This searches for the page by the common name
 def search_pfaf_by_name(name):
   search_url = f"https://pfaf.org/user/DatabaseSearhResult.aspx?CName=%{urllib.parse.quote(name)}%"
   response = requests.get(search_url)
@@ -82,6 +85,7 @@ def find_plant_page_by_name(common_name, botanical_name):
 
   return latin_name, plant_page_url
 
+### This gets the medical uses from the pfaf page
 def scrape_medical_uses(soup):
   # Find the section containing Edible Uses
   medicinal_uses_section = soup.find('h2', string='Medicinal Uses')
@@ -124,6 +128,7 @@ def scrape_medical_uses(soup):
   
   return medicinal_uses 
 
+### This gets the edible uses from the pfaf page
 def scrape_edible_uses(soup):
   # Find the section containing Edible Uses
   edible_uses_section = soup.find('h2', string='Edible Uses')
@@ -173,6 +178,7 @@ def scrape_edible_uses(soup):
   
   return edible_parts, edible_uses 
 
+### This gets the other uses from the pfaf page
 def scrape_other_uses(soup):
     # Find the section containing Edible Uses
     other_uses_section = soup.find('h2', string='Other Uses')
@@ -235,35 +241,82 @@ def get_plant_uses_pfaf(common_name, botanical_name):
 
 ### This gets the plant uses by checking wikipedia
 def get_plant_use_wikipedia(plant_name):
+  # Replace spaces with underscores for the Wikipedia URL
   plant_name = plant_name.replace(' ', '_')
-  wiki = wikipediaapi.Wikipedia('Nyameget (NYAMEGET@GMAIL.COM)', 'en', extract_format=wikipediaapi.ExtractFormat.HTML)
-  page = wiki.page(plant_name)
-  uses_section = page.section_by_title('Uses')
+  url = f"https://en.wikipedia.org/wiki/{plant_name}"
   
-  if uses_section is None:
-    return {None, None}
-  if len(uses_section.sections) == 1:
-    soup = BeautifulSoup(uses_section.text, "html.parser")
-    paragraphs = soup.find_all('p')
-    
-    if len(paragraphs) > 1:
-      return {paragraphs[0].text[:-2], paragraphs[1].text[:-2]}
-    elif len(paragraphs) == 1:
-      return {paragraphs[0].text[:-2], None}
-    else:
-      return {None, None}
-  elif len(uses_section.sections) > 1:
-    if len(BeautifulSoup(uses_section.text, "html.parser").find_all('p')) == 0:
-      uses_section = uses_section.sections[0]
-    soup = BeautifulSoup(uses_section.text, "html.parser")
-    paragraphs = soup.find_all('p')
-    
-    if len(paragraphs) > 1:
-      return {paragraphs[0].text[:-2], paragraphs[1].text[:-2]}
-    elif len(paragraphs) == 1:
-      return {paragraphs[0].text[:-2], None}
-    else:
-      return {None, None}
+  # Fetch the HTML content of the page
+  response = requests.get(url)
+  if response.status_code != 200:
+    print(f"Failed to retrieve page {url}")
+    return None
+  
+  # Parse the HTML content with BeautifulSoup
+  soup = BeautifulSoup(response.content, "html.parser")
+  
+  # Find the "Uses" section manually
+  uses_section = None
+  parent = None
+  for header in soup.find_all(['h2', 'h3', 'h4', 'h5', 'h6']):
+    if 'Uses' in header.text:
+      parent = header.find_parent("div")
+      break
+  
+  if parent is None:
+    return None
+  
+  paragraphs = []
+  next_sibling = parent.find_next_sibling()
+  while next_sibling:
+    if next_sibling.name == 'p':
+      paragraphs.append(next_sibling.text.strip())
+    elif 'mw-heading' in next_sibling.get('class', []):
+      break
+    next_sibling = next_sibling.find_next_sibling()
+  
+  if len(paragraphs) >= 1:
+    return paragraphs
+  else:
+    return None
+
+### This gets the uses from google
+def get_google_uses(common_name):
+  def google_search(query, api_key, cse_id, num=10):
+    url = "https://www.googleapis.com/customsearch/v1"
+    params = {
+      'q': query,
+      'key': api_key,
+      'cx': cse_id,
+      'num': num
+    }
+    response = requests.get(url, params=params)
+    return response.json()
+
+  api_key = 'AIzaSyDybQAwDNM4X_yiIqDjtR9IZS83QhIQlfM'
+  cse_id = '9321b59816bac4ca6'
+  common_name = common_name.replace('-', ' ') if '-' in common_name else common_name
+  query = f'{common_name} uses'
+
+  results = google_search(query, api_key, cse_id)
+
+  # Extract and print the first snippet
+  if 'items' in results:
+    for item in results['items']:
+      snippet = item.get('snippet')
+      if snippet:
+        link = item.get('link')
+        if link:
+          return {
+            'snippet': snippet,
+            'link': link  
+          }
+        break
+  else:
+    print("No results found")
+    link = 'https://www.google.com/search?q={urllib.parse.quote(common_name)}+uses'
+    return {
+      'None': link
+    }
 
 ### This gets the plant uses by checking pfaf if no result is returned then checks wikipedia
 def get_plant_uses(common_name, botanical_name):
@@ -273,3 +326,106 @@ def get_plant_uses(common_name, botanical_name):
   else:
     wikipedia_info = get_plant_use_wikipedia(common_name)
     return wikipedia_info
+
+### Gets the plant uses using the family name and botanical name
+def search_pfaf_by_family(family):
+  search_url = f"https://pfaf.org/user/search_name.aspx?family={urllib.parse.quote(family)}"
+  response = requests.get(search_url)
+  soup = BeautifulSoup(response.text, 'html.parser')
+  return soup.find('table', id='ContentPlaceHolder1_gvresults')
+
+### This finds the exact page url and the latin name of the plant
+def find_plant_page_by_family(family_name, botanical_name):
+  result_table = search_pfaf_by_family(family_name)
+  botanical_name_ = botanical_name.split(' ')[0]
+  ### This checks the table for the reult that best describes the searched plant
+  def check_table_family(result_table):
+    if not result_table:
+      return None, None
+    rows = result_table.find_all('tr')[1:]  # Skip the header row
+    for row in rows:
+      columns = row.find_all('td')
+      if len(columns) < 2:
+        continue
+      latin_name = columns[0].get_text().strip()
+      common_name = columns[1].get_text().strip()
+      family_name_ = columns[2].get_text().strip()
+      if botanical_name_.lower() in latin_name.lower() or family_name.lower() in family_name_.lower():
+        return latin_name, f"https://pfaf.org/user/Plant.aspx?LatinName={urllib.parse.quote(latin_name)}", common_name
+    return None, None
+  latin_name, plant_page_url, common_name = check_table_family(result_table)
+  return latin_name, plant_page_url, common_name
+
+### This gets the plant uses by checking pfaf
+def get_plant_uses_pfaf_family(family_name, botanical_name):
+  latin_name, plant_page_url, common_name = find_plant_page_by_family(family_name, botanical_name)
+  if not plant_page_url:
+    return None
+  response = requests.get(plant_page_url)
+  soup = BeautifulSoup(response.text, 'html.parser')
+  medicinal_uses = scrape_medical_uses(soup)
+  edible_parts, edible_uses = scrape_edible_uses(soup)
+  other_uses = scrape_other_uses(soup)
+  uses = {
+    'Other Uses': other_uses,
+    'Edible Parts': edible_parts,
+    'Edible Uses': edible_uses,
+    'Medicinal Uses': medicinal_uses
+  }
+  return uses, common_name
+
+### This gets the plant uses by checking pfaf if no result is returned then checks wikipedia
+def get_plant_uses_family(family_name, botanical_name):
+  common_name = ''
+  uses, common_name = get_plant_uses_pfaf_family(family_name, botanical_name)
+  botanical__name = botanical_name.replace('-', ' ') if '-' in botanical_name else botanical_name
+  query = f"{botanical_name} uses"
+  if uses:
+    return uses, common_name
+  else:
+    wikipedia_info = get_plant_use_wikipedia(botanical_name)
+    if wikipedia_info is None:
+      google_search = get_google_uses(query)
+      return google_search, common_name
+    return wikipedia_info, common_name
+
+### This gets the plant description from the wikipedia page
+def get_plant_description_wikipedia(plant_name):
+  # Replace spaces with underscores for the Wikipedia URL
+  plant_name = plant_name.split(' ')
+  if 'x' in plant_name:
+    plant_name.remove('x')
+    plant_name = ' '.join(plant_name)
+  else:
+    plant_name = '_'.join(plant_name)
+  plant_name = plant_name.replace(' ', '_')
+  url = f"https://en.wikipedia.org/wiki/{plant_name}"
+  
+  # Fetch the HTML content of the page
+  response = requests.get(url)
+  if response.status_code != 200:
+    print(f"Failed to retrieve page {url}")
+    return None
+  
+  # Parse the HTML content with BeautifulSoup
+  soup = BeautifulSoup(response.content, "html.parser")
+  
+  # Find the "Uses" section manually
+  description_section = None
+  parent = soup.find('div', class_='mw-content-ltr mw-parser-output')
+  if parent is None:
+    return None
+  
+  paragraphs = []
+  next_sibling = parent.find_next()
+  while next_sibling:
+    if next_sibling.name == 'p' and len(next_sibling.text.strip()) != 0:
+      paragraphs.append(next_sibling.text.strip())
+    elif 'mw-heading' in next_sibling.get('class', []):
+      break
+    next_sibling = next_sibling.find_next_sibling()
+  
+  if len(paragraphs) >= 1:
+    return paragraphs
+  else:
+    return None

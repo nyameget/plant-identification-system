@@ -3,7 +3,8 @@ from datetime import timedelta
 from werkzeug.utils import secure_filename
 from models import db, User, Plant, Comment, email_exists, username_exists, username_count, get_user
 from models import password_count, email_count, get_plants, plants_saved_count, get_reviews
-from usable import watering_message, truncate_words, generate_category, get_plant_uses
+from usable import watering_message, truncate_words, generate_category, get_plant_uses, get_google_uses, get_plant_uses_family, get_plant_description_wikipedia
+import urllib.parse
 import base64
 import requests
 import json
@@ -23,7 +24,8 @@ PLANT_ID_API_URL = "https://plant.id/api/v3/identification"
 url = "https://plant.id/api/v3/identification?details=common_names,url,description,taxonomy,rank,gbif_id,inaturalist_id,image,synonyms,edible_parts,watering&language=en"
 
 # Replace with your Plant.id API token
-PLANT_ID_API_KEY = "fD36bEMgJsEKDxWoEQHp8kvgeSAMH97j84vlZmaRguzJjv59HK"
+PLANT_ID_API_KEY_OLD = "fD36bEMgJsEKDxWoEQHp8kvgeSAMH97j84vlZmaRguzJjv59HK"
+PLANT_ID_API_KEY = "CW066FNcuEPNfjkhv6YEfeB9F9HPrEkTaAQdFiSZEU7epfjLMd"
 
 @app.route('/', methods=['GET'])
 def welcome():
@@ -367,10 +369,10 @@ def upload():
             }
             # This integrates the plant.id api
             response = requests.request("POST", url, headers=headers, data=payload)
-
             if response.status_code == 201:
                 # Turns the response into JSON
                 plant_info = response.json()
+                print(plant_info)
                 # This gets the result portion of the response
                 result = plant_info['result']
                 # This gets the is_plant portion of the response
@@ -381,16 +383,50 @@ def upload():
                 plant_binary = is_plant['binary']
                 if plant_binary:
                     # This gets the common name of the plant
-                    common_name = result['classification']['suggestions'][0]['details']['common_names'][0]
-                    # This gets the scientific name of the plant
-                    botanical_name = result['classification']['suggestions'][0]['name']
-                    # This gets the family of the plant
-                    family = result['classification']['suggestions'][0]['details']['taxonomy']['family']
-                    # If the common name is the same as the scientific name choose the scientific name as common name
-                    if common_name.lower() == family.lower():
-                        common_name = botanical_name
-                    # Get the plant uses from pfaf or wikipedia
-                    plant_uses = get_plant_uses(common_name, botanical_name)
+                    common_names = result['classification']['suggestions'][0]['details']['common_names']
+                    if common_names:
+                        # This gets the scientific name of the plant
+                        botanical_name = result['classification']['suggestions'][0]['name']
+                        # This gets the family of the plant
+                        family = result['classification']['suggestions'][0]['details']['taxonomy']['family']
+                        plant_uses = None
+                        # Check uses for each common name
+                        for common_name in common_names:
+                            if common_name.lower() == family.lower():
+                                common_name = botanical_name
+                            plant_uses = get_plant_uses(common_name, botanical_name)
+                            if plant_uses is not None:
+                                break
+                        # If plant uses not found for any common name, try Google search
+                        if plant_uses is None:
+                            plant_uses = get_google_uses(common_names[0])
+                    else:
+                        if len(result['classification']['suggestions']) > 1:
+                            common_names = result['classification']['suggestions'][1]['details']['common_names']
+                            common_name = common_names[0]
+                            if common_names:
+                                # This gets the scientific name of the plant
+                                botanical_name = result['classification']['suggestions'][0]['name']
+                                # This gets the family of the plant
+                                family = result['classification']['suggestions'][0]['details']['taxonomy']['family']
+                                plant_uses = None
+                                # Check uses for each common name
+                                for common_name in common_names:
+                                    if common_name.lower() == family.lower():
+                                        common_name = botanical_name
+                                    plant_uses = get_plant_uses(common_name, botanical_name)
+                                    if plant_uses is not None:
+                                        break
+                                # If plant uses not found for any common name, try Google search
+                                if plant_uses is None:
+                                    plant_uses = get_google_uses(common_names[0])
+                        elif len(result['classification']['suggestions']) == 1 and result['classification']['suggestions'][0]['details']['common_names'] is None:
+                            family_name = result['classification']['suggestions'][0]['details']['taxonomy']['family']
+                            botanical_name = result['classification']['suggestions'][0]['name']
+                            plant_uses, common_name = get_plant_uses_family(family_name, botanical_name)
+                            result['classification']['suggestions'][0]['details']['common_names'] = [common_name]
+                        else:
+                            print("No common names found in the classification results.")
                     # Saves the plant into the plants table
                     new_plant = Plant(filename=file.filename, image_data=image_file, plant_info=plant_info, plant_uses=plant_uses, username=session['username'])
                     db.session.add(new_plant)
@@ -402,9 +438,13 @@ def upload():
                 # Image does not contain plant
                 flash('Image does not contain a plant', 'warning')
                 return redirect(url_for('scan'))
+            elif response.status_code == 200:
+                data = response.json()
+                print(data)
             # Invalid response returned
             return render_template('apierror.html', data=jsonify({'error': 'Failed to identify plant'}))
         except Exception as e:
+
             return render_template('apierror.html', data=jsonify({'error': str(e)}))
         
 @app.route('/results/<int:image_id>')
@@ -445,8 +485,6 @@ def results(image_id):
             disease_common_name = 'None'
     # Gets the first suggestion in the response
     suggestions = classification['suggestions'][0]
-    # Gets the name of the plant
-    plant_name = suggestions['name']
     # Gets the probabilty of the plant in the images similiarity
     plant_prob = suggestions['probability']
     # Gets the similiar images in the response 
@@ -454,13 +492,29 @@ def results(image_id):
     # Gets the details portion of the response
     details = suggestions['details']
     # Gets the common name of the plant
-    common_name = details['common_names'][0]
+    if details['common_names'] is not None:
+        common_name = details['common_names'][0]
+        # Gets the name of the plant
+        plant_name = suggestions['name']
+    elif len(result['classification']['suggestions']) == 1 and details['common_names'] is None: 
+        common_name = details['common_names']
+        plant_name = suggestions['name']
+    else:
+        common_name = result['classification']['suggestions'][1]['details']['common_names'][0]
+        plant_name = result['classification']['suggestions'][1]['name']
     # Gets the taxonomy of the plant
     taxonomy = details['taxonomy']
     list_taxonomy = list(taxonomy.items())[::-1]
     reversed_taxonomy = {key: value for key, value in list_taxonomy}
     # Gets the description of the plant
-    description = details['description']['value']
+    if details['description']:
+        description = details['description']['value']
+    elif len(result['classification']['suggestions']) == 1 and result['classification']['suggestions'][0]['details']['description'] is None:
+        description = get_plant_description_wikipedia(common_name)
+        if description is None:
+            description = get_plant_description_wikipedia(plant_name)
+    else: 
+        description = result['classification']['suggestions'][1]['details']['description']['value']
     # Gets the synonyms of the plants name
     synonyms = details['synonyms']
     # Checks if  the plant is edibles
@@ -520,8 +574,6 @@ def history():
                                 if suggestions and len(suggestions) > 0:
                                     suggestion = suggestions[0]
                                     # Now safely access suggestion values
-                                    # Gets the name of the plant
-                                    plant_name = suggestion['name']
                                     # Gets the probabilty of the plant in the images similiarity
                                     plant_prob = suggestion['probability']
                                     # Gets the similiar images in the response 
@@ -529,13 +581,29 @@ def history():
                                     # Gets the details portion of the response
                                     details = suggestion['details']
                                     # Gets the common name of the plant
-                                    common_name = details['common_names'][0]
+                                    if details['common_names'] is not None:
+                                        common_name = details['common_names'][0]
+                                        # Gets the name of the plant
+                                        plant_name = suggestion['name']
+                                    elif details['common_names'] is None and len(suggestions) == 1:
+                                        common_name = details['common_name']
+                                        plant_name = suggestion['name']
+                                    else:
+                                        common_name = classification['suggestions'][1]['details']['common_names'][0]
+                                        plant_name = classification['suggestions'][1]['name']                                    
                                     # Gets the taxonomy of the plant
                                     taxonomy = details['taxonomy']
                                     list_taxonomy = list(taxonomy.items())[::-1]
                                     reversed_taxonomy = {key: value for key, value in list_taxonomy}
                                     # Gets the description of the plant
-                                    description = details['description']['value']
+                                    if details['description']:
+                                        description = details['description']['value']
+                                    elif len(result['classification']['suggestions']) == 1 and result['classification']['suggestions'][0]['details']['description'] is None:
+                                        description = get_plant_description_wikipedia(common_name)
+                                        if description is None:
+                                            description = get_plant_description_wikipedia(plant_name)
+                                    else: 
+                                        description = result['classification']['suggestions'][1]['details']['description']['value']
                                     description = truncate_words(description, 60)
                                     # Gets the synonyms of the plants name
                                     synonyms = details['synonyms']

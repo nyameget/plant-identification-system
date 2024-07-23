@@ -20,7 +20,11 @@
                 </div>
                 <div class="description">
                     <p class="description-title">Description: </p>
-                    <p>{{ data.results.description }}</p>
+                    {% if data.results.description is not none %}
+                        <p>{{ data.results.description }}</p>
+                    {% else %}
+                        <p>No plant description was found!!!</p>
+                    {% endif %}
                 </div>
                 <div class="irrigation-info">
                     <p><span class="irrigation-info-title">Irrigation:</span>{{ data.results.watering }}</p>
@@ -46,27 +50,38 @@
                         </ul>
                     </div>
                 {% else %}
-                    {% for key, value in data.results.plant_uses.items() %}
-                        {% if value|length != 0 %}
-                            {% if key == 'Edible Parts' %}
-                                <h2>{{ key }}</h2>
-                                <div class="uses-parts">
-                                    {% for use in value %}
-                                        <span> <p>{{ use }} |</p> </span>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <h2>{{ key }}</h2>
-                                <div class="uses">
-                                    <ul>
+                    {% if data.results.plant_uses.None %}
+                        <h3>Plant uses could not be found check this google link for more Information</h3>
+                        <a href="{{ data.results.plant_uses['None'] }}" target="_blank">Link To Google</a>
+                    {% elif data.results.plant_uses.snippet %}
+                        <h2>Plant Uses Data</h2>
+                        <div class="uses">
+                            <p>{{ data.results.plant_uses.snippet }}</p>
+                            <a href="{{ data.results.plant_uses.link }}" target="_blank">Find More Information Here</a>
+                        </div>
+                    {% else %}
+                        {% for key, value in data.results.plant_uses.items() %}
+                            {% if value|length != 0 %}
+                                {% if key == 'Edible Parts' %}
+                                    <h2>{{ key }}</h2>
+                                    <div class="uses-parts">
                                         {% for use in value %}
-                                            <li> <p>{{ use }}</p> </li>
+                                            <span> <p>{{ use }} |</p> </span>
                                         {% endfor %}
-                                    </ul>
-                                </div>
+                                    </div>
+                                {% else %}
+                                    <h2>{{ key }}</h2>
+                                    <div class="uses">
+                                        <ul>
+                                            {% for use in value %}
+                                                <li> <p>{{ use }}</p> </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
-                    {% endfor %}
+                        {% endfor %}
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
